@@ -1,7 +1,14 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { LoginDto } from 'src/users/dto/login-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { LoginDto } from '../users/dto/login-user.dto';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
@@ -10,6 +17,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @ApiOperation({ summary: 'Login user' })
@@ -21,12 +29,13 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('signup')
   @ApiOperation({ summary: 'Signup user' })
   @ApiParam({ name: 'password' })
   @ApiParam({ name: 'email' })
   @ApiParam({ name: 'name' })
-  @ApiResponse({ status: 200, description: 'User signed up' })
+  @ApiResponse({ status: 201, description: 'User signed up' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async signup(@Body() registerDto: CreateUserDto) {
     return this.authService.signup(registerDto);

@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { UsersService } from 'src/users/users.service';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -13,9 +13,12 @@ export class AuthService {
 
   async validateUser(email: string, passcode: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    const isPasswordValid = await bcrypt.compare(passcode, user.password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    if (user && isPasswordValid) {
+    const isPasswordValid = await bcrypt.compare(passcode, user.password);
+    if (isPasswordValid) {
       delete user.password;
       return user;
     }
@@ -26,11 +29,15 @@ export class AuthService {
   async login(user: any) {
     const payload = { email: user.email, sub: user.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
     };
   }
 
   async signup(userDto: CreateUserDto) {
-    return this.usersService.create(userDto);
+    const dbUser = await this.usersService.create(userDto);
+    const payload = { email: dbUser.email, sub: dbUser.id };
+    return {
+      accessToken: this.jwtService.sign(payload),
+    };
   }
 }

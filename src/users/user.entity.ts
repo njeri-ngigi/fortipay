@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import { Wallet } from 'src/wallet/wallet.entity';
 import {
   BeforeInsert,
   Column,
@@ -10,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Wallet } from '../wallet/wallet.entity';
 
 @Entity('users')
 export class User {
