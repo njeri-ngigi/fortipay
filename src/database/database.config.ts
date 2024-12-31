@@ -1,10 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import dotenv from 'dotenv';
-import { User } from 'src/users/user.entity';
-import { Wallet } from 'src/wallet/wallet.entity';
-
-dotenv.config();
+import 'dotenv/config';
 
 const getConfig = (): TypeOrmModuleOptions => {
   const port = Number(process.env.POSTGRES_PORT);
@@ -13,13 +9,14 @@ const getConfig = (): TypeOrmModuleOptions => {
   }
 
   return {
+    type: 'postgres',
+    port,
+    host: process.env.POSTGRES_HOST,
+    database: process.env.POSTGRES_DATABASE,
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
-    host: process.env.POSTGRES_HOST,
-    port,
-    type: 'postgres',
-    entities: [User, Wallet],
+    synchronize: process.env.NODE_ENV === 'DEV', // change this to use migrations in production
   };
 };
 
-export default getConfig();
+export const config = getConfig();

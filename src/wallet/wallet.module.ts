@@ -6,5 +6,6 @@ import { WalletService } from './wallet.service';
 @Module({
   providers: [WalletService],
   imports: [TypeOrmModule.forFeature([Wallet])],
+  exports: [WalletService],
 })
 export class WalletModule {}
