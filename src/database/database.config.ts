@@ -1,10 +1,15 @@
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import 'dotenv/config';
 
 const getConfig = (): TypeOrmModuleOptions => {
+  const logger = new Logger('Get configs from env', {
+    timestamp: true,
+  });
+
   const port = Number(process.env.POSTGRES_PORT);
   if (isNaN(port)) {
+    logger.error(`Invalid POSTGRES_PORT ${port}`);
     throw new InternalServerErrorException('POSTGRES_PORT must be a number');
   }
 
