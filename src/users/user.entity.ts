@@ -1,6 +1,4 @@
-import bcrypt from 'bcrypt';
 import {
-  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -34,7 +32,6 @@ export class User {
   @Column({
     type: 'varchar',
     nullable: false,
-    select: false,
   })
   password: string;
 
@@ -61,10 +58,4 @@ export class User {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
-
-  @BeforeInsert()
-  async hashPassword(): Promise<void> {
-    const saltRounds = 10;
-    this.password = await bcrypt.hash(this.password, saltRounds);
-  }
 }

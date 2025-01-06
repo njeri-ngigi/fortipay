@@ -4,11 +4,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { LoginDto } from '../users/dto/login-user.dto';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
@@ -25,8 +25,8 @@ export class AuthController {
   @ApiParam({ name: 'email' })
   @ApiResponse({ status: 200, description: 'User logged in' })
   @ApiResponse({ status: 401, description: 'Authentication failed' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Request() req) {
+    return this.authService.login(req.user);
   }
 
   @HttpCode(HttpStatus.CREATED)
