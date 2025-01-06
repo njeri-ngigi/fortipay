@@ -8,7 +8,7 @@ export class WalletController {
   constructor(private walletService: WalletService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('balance')
   @ApiOperation({ summary: 'Get wallet balance' })
   getUserWalletBalance(@Request() req) {
     return this.walletService.getWalletUserBalance(req.user);
