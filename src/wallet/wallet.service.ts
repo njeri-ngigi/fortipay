@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   Logger,
@@ -8,12 +9,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BigNumber } from 'bignumber.js';
 import { DataSource, Repository } from 'typeorm';
 import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
+import { Transaction } from '../transactions/transaction.entity';
 import {
   PartialTransaction,
   TransactionsService,
 } from '../transactions/transactions.service';
 import { User } from '../users/user.entity';
 import { FundWalletDto } from './dto/fund-wallet.dto';
+import { WithdrawWalletDto } from './dto/withdraw-wallet.dto';
 import { Wallet } from './wallet.entity';
 
 @Injectable()
@@ -35,13 +38,17 @@ export class WalletService {
     });
   }
 
-  async findWalletByUserId(userId: string): Promise<Wallet> {
+  async findWalletByUserId(
+    userId: string,
+    includeTransactions?: boolean,
+  ): Promise<Wallet> {
     const wallet = await this.walletRepository.findOne({
       where: {
         user: {
           id: userId,
         },
       },
+      relations: includeTransactions ? ['transactions'] : [],
     });
     if (!wallet) {
       this.logger.error(`Wallet for ${userId} not found.`);
@@ -68,7 +75,10 @@ export class WalletService {
     }
   }
 
-  async createTransaction(transaction: PartialTransaction, wallet: Wallet) {
+  async updateWalletAndCreateTransaction(
+    transaction: PartialTransaction,
+    wallet: Wallet,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -98,7 +108,6 @@ export class WalletService {
     const wallet = await this.findWalletByUserId(user.userId);
     const currentBalance = new BigNumber(wallet.balance);
     const newBalance = currentBalance.plus(new BigNumber(amount));
-
     wallet.balance = newBalance.toFixed(2);
 
     const transaction: PartialTransaction = {
@@ -108,9 +117,48 @@ export class WalletService {
       status: 'completed',
       transactionType: 'deposit',
     };
-
-    await this.createTransaction(transaction, wallet);
+    await this.updateWalletAndCreateTransaction(transaction, wallet);
 
     return wallet;
+  }
+
+  async withdrawFromUserWallet(
+    user: JwtPayloadDto,
+    data: WithdrawWalletDto,
+  ): Promise<Wallet> {
+    const { idempotencyKey, amount } = data;
+
+    await this._ensureTransactionIsUnique(idempotencyKey);
+
+    const wallet = await this.findWalletByUserId(user.userId);
+    const currentBalance = new BigNumber(wallet.balance);
+    const deduction = new BigNumber(amount);
+
+    if (currentBalance.isLessThan(deduction)) {
+      throw new BadRequestException('Insufficient balance.');
+    }
+
+    const newBalance = currentBalance.minus(new BigNumber(amount));
+    wallet.balance = newBalance.toFixed(2);
+
+    const transaction: PartialTransaction = {
+      amount: new BigNumber(amount).toFixed(2),
+      wallet,
+      idempotencyKey,
+      status: 'completed',
+      transactionType: 'withdrawal',
+    };
+    await this.updateWalletAndCreateTransaction(transaction, wallet);
+
+    return wallet;
+  }
+
+  async getUserTransactions(user: JwtPayloadDto): Promise<Transaction[]> {
+    const INCLUDE_TRANSACTIONS = true;
+    const wallet = await this.findWalletByUserId(
+      user.userId,
+      INCLUDE_TRANSACTIONS,
+    );
+    return wallet.transactions;
   }
 }

@@ -12,7 +12,7 @@ export class TransactionsService {
     private transactionsRepository: Repository<Transaction>,
   ) {}
 
-  findOneByIdempotencyKey(idempotencyKey: string) {
+  findOneByIdempotencyKey(idempotencyKey: string): Promise<Transaction> {
     return this.transactionsRepository.findOne({
       where: {
         idempotencyKey,
@@ -20,7 +20,7 @@ export class TransactionsService {
     });
   }
 
-  create(transaction: PartialTransaction) {
+  create(transaction: PartialTransaction): Promise<Transaction> {
     return this.transactionsRepository.save(transaction);
   }
 }
