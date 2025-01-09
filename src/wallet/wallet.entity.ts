@@ -1,13 +1,15 @@
-import { User } from '../users/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Transaction } from '../transactions/transaction.entity';
+import { User } from '../users/user.entity';
 
 @Entity('wallet')
 export class Wallet {
@@ -18,13 +20,16 @@ export class Wallet {
   @JoinColumn()
   user: User;
 
+  @OneToMany(() => Transaction, (transaction) => transaction.wallet)
+  transactions: Transaction[];
+
   @Column({
     type: 'decimal',
     precision: 15,
     scale: 2,
     default: 0.0,
   })
-  balance: number;
+  balance: string;
 
   @Column({
     type: 'enum',
