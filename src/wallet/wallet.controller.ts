@@ -5,11 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Put,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { PaginatedTransactionsResponse } from 'src/transactions/transactions.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginationRequestDto } from '../common/dto/pagination-request.dto';
 import { FundWalletDto } from './dto/fund-wallet.dto';
 import { WithdrawWalletDto } from './dto/withdraw-wallet.dto';
 import { WalletService } from './wallet.service';
@@ -41,11 +44,28 @@ export class WalletController {
     return this.walletService.withdrawFromUserWallet(req.user, body);
   }
 
+  // TODO: paginate these results
+  // TODO: add indexing to relevant columns, like idempotencyKey
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @Get('transactions')
   @ApiOperation({ summary: 'Get a users transactions' })
-  getUserTransactions(@Request() req) {
-    return this.walletService.getUserTransactions(req.user);
+  @ApiQuery({
+    name: 'page',
+    description: 'The page number (1-based index)',
+    example: 1,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'The number of items per page',
+    example: 10,
+    required: false,
+  })
+  getUserTransactions(
+    @Request() req,
+    @Query() query: PaginationRequestDto,
+  ): Promise<PaginatedTransactionsResponse> {
+    return this.walletService.getUserTransactions(req.user, query);
   }
 }

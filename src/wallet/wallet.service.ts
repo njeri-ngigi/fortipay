@@ -9,8 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BigNumber } from 'bignumber.js';
 import { DataSource, Repository } from 'typeorm';
 import { JwtPayloadDto } from '../auth/dto/jwt-payload.dto';
-import { Transaction } from '../transactions/transaction.entity';
+import { PaginationRequestDto } from '../common/dto/pagination-request.dto';
 import {
+  PaginatedTransactionsResponse,
   PartialTransaction,
   TransactionsService,
 } from '../transactions/transactions.service';
@@ -38,17 +39,13 @@ export class WalletService {
     });
   }
 
-  async findWalletByUserId(
-    userId: string,
-    includeTransactions?: boolean,
-  ): Promise<Wallet> {
+  async findWalletByUserId(userId: string): Promise<Wallet> {
     const wallet = await this.walletRepository.findOne({
       where: {
         user: {
           id: userId,
         },
       },
-      relations: includeTransactions ? ['transactions'] : [],
     });
     if (!wallet) {
       this.logger.error(`Wallet for ${userId} not found.`);
@@ -153,12 +150,15 @@ export class WalletService {
     return wallet;
   }
 
-  async getUserTransactions(user: JwtPayloadDto): Promise<Transaction[]> {
-    const INCLUDE_TRANSACTIONS = true;
-    const wallet = await this.findWalletByUserId(
-      user.userId,
-      INCLUDE_TRANSACTIONS,
+  async getUserTransactions(
+    user: JwtPayloadDto,
+    paginationData: PaginationRequestDto,
+  ): Promise<PaginatedTransactionsResponse> {
+    const wallet = await this.findWalletByUserId(user.userId);
+
+    return this.transactionsService.getPaginatedTransactions(
+      wallet,
+      paginationData,
     );
-    return wallet.transactions;
   }
 }
