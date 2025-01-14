@@ -7,6 +7,19 @@ import {
 } from 'typeorm';
 import { Wallet } from '../wallet/wallet.entity';
 
+export enum TransactionType {
+  Deposit = 'deposit',
+  Withdrawal = 'withdrawal',
+  Transfer = 'transfer',
+  Received = 'received',
+}
+
+export enum TransactionStatus {
+  Pending = 'pending',
+  Completed = 'completed',
+  Failed = 'failed',
+}
+
 @Entity('transactions')
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
@@ -29,15 +42,15 @@ export class Transaction {
 
   @Column({
     type: 'enum',
-    enum: ['deposit', 'withdrawal', 'transfer'],
+    enum: ['deposit', 'withdrawal', 'transfer', 'received'],
   })
-  transactionType: 'deposit' | 'withdrawal' | 'transfer';
+  transactionType: TransactionType;
 
   @Column({
     type: 'enum',
     enum: ['pending', 'completed', 'failed'],
   })
-  status: 'pending' | 'completed' | 'failed';
+  status: TransactionStatus;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

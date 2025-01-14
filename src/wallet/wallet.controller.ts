@@ -14,6 +14,7 @@ import { PaginatedTransactionsResponse } from 'src/transactions/transactions.ser
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationRequestDto } from '../common/dto/pagination-request.dto';
 import { FundWalletDto } from './dto/fund-wallet.dto';
+import { TransferFundsDto } from './dto/transfer-funds.dto';
 import { WithdrawWalletDto } from './dto/withdraw-wallet.dto';
 import { WalletService } from './wallet.service';
 
@@ -44,8 +45,6 @@ export class WalletController {
     return this.walletService.withdrawFromUserWallet(req.user, body);
   }
 
-  // TODO: paginate these results
-  // TODO: add indexing to relevant columns, like idempotencyKey
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @Get('transactions')
@@ -67,5 +66,13 @@ export class WalletController {
     @Query() query: PaginationRequestDto,
   ): Promise<PaginatedTransactionsResponse> {
     return this.walletService.getUserTransactions(req.user, query);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Put('transfer')
+  @ApiOperation({ summary: "Transfer funds to another a user's wallet" })
+  transferFundsToAnotherUser(@Request() req, @Body() body: TransferFundsDto) {
+    return this.walletService.transferFundsToAnotherUser(req.user, body);
   }
 }
