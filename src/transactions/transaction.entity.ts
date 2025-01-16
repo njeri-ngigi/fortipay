@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -32,6 +33,7 @@ export class Transaction {
   })
   amount: string;
 
+  @Index({ unique: true })
   @Column({
     type: 'varchar',
     length: 255,
@@ -55,6 +57,7 @@ export class Transaction {
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
+  @Index()
   @ManyToOne(() => Wallet, (wallet) => wallet.transactions)
   wallet: Wallet;
 }
